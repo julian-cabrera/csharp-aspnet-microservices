@@ -11,23 +11,18 @@ using Serilog;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddScoped<IBasketRepository, BasketRepository>();
+builder.Services.AddAutoMapper(typeof(Program));
 
-//Redis configuration
 builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.Configuration = builder.Configuration.GetValue<string>("CacheSettings:ConnectionString");
 });
 
-//General configuration
-builder.Services.AddScoped<IBasketRepository, BasketRepository>();
-builder.Services.AddAutoMapper(typeof(Program));
-
-//Grpc configuration
 builder.Services.AddGrpcClient<DiscountProtoService.DiscountProtoServiceClient>
     (options => options.Address = new Uri(builder.Configuration["GrpcSettings:DiscountUrl"]));
 builder.Services.AddScoped<DiscountGrpcService>();
 
-//MassTransit-RabbitMq configuraiton
 builder.Services.AddMassTransit(configuration =>
 {
     configuration.UsingRabbitMq((context, config) =>
@@ -36,11 +31,11 @@ builder.Services.AddMassTransit(configuration =>
     });
     configuration.AddHealthChecks();
 });
-//builder.Services.AddMassTransitHostedService();
 
 builder.Host.UseSerilog(SeriLogger.Configure);
 
 builder.Services.AddControllers();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
